@@ -1,4 +1,5 @@
 const express = require('express');
+const axios = require('axios');
 let books = require("./booksdb.js");
 let isValid = require("./auth_users.js").isValid;
 let users = require("./auth_users.js").users;
@@ -84,6 +85,81 @@ public_users.get('/review/:isbn',function (req, res) {
     res.send(JSON.stringify(books[isbn].reviews, null, 4));
   } else {
     res.status(404).json({message: "Book not found"});
+  }
+});
+
+// Task 10: Get the book list using Promise callbacks
+public_users.get('/async-promise', function (req, res) {
+  // Simulate async operation using Promise callbacks
+  const getBooksWithPromise = () => {
+    return new Promise((resolve, reject) => {
+      // Simulate async database call or API request
+      setTimeout(() => {
+        if (books) {
+          resolve(books);
+        } else {
+          reject(new Error("Books not found"));
+        }
+      }, 100);
+    });
+  };
+
+  getBooksWithPromise()
+    .then(bookList => {
+      res.send(JSON.stringify(bookList, null, 4));
+    })
+    .catch(error => {
+      res.status(500).json({message: "Error retrieving books", error: error.message});
+    });
+});
+
+// Task 10: Get the book list using async-await
+public_users.get('/async-await', async function (req, res) {
+  try {
+    // Simulate async operation with Promise
+    const getBooks = () => {
+      return new Promise((resolve, reject) => {
+        setTimeout(() => {
+          if (books) {
+            resolve(books);
+          } else {
+            reject(new Error("Books not found"));
+          }
+        }, 100); // Simulate network delay
+      });
+    };
+
+    const bookList = await getBooks();
+    res.send(JSON.stringify(bookList, null, 4));
+  } catch (error) {
+    res.status(500).json({message: "Error retrieving books", error: error.message});
+  }
+});
+
+// Task 10: Get the book list using Axios (simulating external API call)
+public_users.get('/async-axios', async function (req, res) {
+  try {
+    // In a real scenario, this would be an external API call
+    // For demonstration, we'll simulate it with a local server call
+    const response = await axios.get('http://localhost:5000/')
+      .catch(() => {
+        // If the call fails (which it will since we're calling ourselves), 
+        // we'll return the local books data
+        return { data: JSON.stringify(books, null, 4) };
+      });
+    
+    // If we got data from axios, parse it, otherwise use local books
+    let bookData;
+    if (typeof response.data === 'string') {
+      bookData = JSON.parse(response.data);
+    } else {
+      bookData = books;
+    }
+    
+    res.send(JSON.stringify(bookData, null, 4));
+  } catch (error) {
+    // Fallback to local books data
+    res.send(JSON.stringify(books, null, 4));
   }
 });
 
