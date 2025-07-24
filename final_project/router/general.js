@@ -163,4 +163,90 @@ public_users.get('/async-axios', async function (req, res) {
   }
 });
 
+// Task 11: Get book details by ISBN using Promise callbacks
+public_users.get('/isbn-promise/:isbn', function (req, res) {
+  const isbn = req.params.isbn;
+  
+  // Simulate async operation using Promise callbacks
+  const getBookByISBN = (isbn) => {
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        if (books[isbn]) {
+          resolve(books[isbn]);
+        } else {
+          reject(new Error("Book not found"));
+        }
+      }, 100);
+    });
+  };
+
+  getBookByISBN(isbn)
+    .then(book => {
+      res.send(JSON.stringify(book, null, 4));
+    })
+    .catch(error => {
+      res.status(404).json({message: "Book not found", error: error.message});
+    });
+});
+
+// Task 11: Get book details by ISBN using async-await
+public_users.get('/isbn-async/:isbn', async function (req, res) {
+  const isbn = req.params.isbn;
+  
+  try {
+    // Simulate async operation with Promise
+    const getBookByISBN = (isbn) => {
+      return new Promise((resolve, reject) => {
+        setTimeout(() => {
+          if (books[isbn]) {
+            resolve(books[isbn]);
+          } else {
+            reject(new Error("Book not found"));
+          }
+        }, 100);
+      });
+    };
+
+    const book = await getBookByISBN(isbn);
+    res.send(JSON.stringify(book, null, 4));
+  } catch (error) {
+    res.status(404).json({message: "Book not found", error: error.message});
+  }
+});
+
+// Task 11: Get book details by ISBN using Axios
+public_users.get('/isbn-axios/:isbn', async function (req, res) {
+  const isbn = req.params.isbn;
+  
+  try {
+    // In a real scenario, this would be an external API call
+    // For demonstration, we'll simulate it with a local server call
+    const response = await axios.get(`http://localhost:5000/isbn/${isbn}`)
+      .catch(() => {
+        // If the call fails, we'll use local books data
+        if (books[isbn]) {
+          return { data: JSON.stringify(books[isbn], null, 4) };
+        } else {
+          throw new Error("Book not found");
+        }
+      });
+    
+    // If we got data from axios, parse it, otherwise use local book
+    let bookData;
+    if (typeof response.data === 'string') {
+      bookData = JSON.parse(response.data);
+    } else {
+      bookData = books[isbn];
+    }
+    
+    if (bookData) {
+      res.send(JSON.stringify(bookData, null, 4));
+    } else {
+      res.status(404).json({message: "Book not found"});
+    }
+  } catch (error) {
+    res.status(404).json({message: "Book not found", error: error.message});
+  }
+});
+
 module.exports.general = public_users;
