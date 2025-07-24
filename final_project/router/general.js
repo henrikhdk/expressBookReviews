@@ -372,4 +372,127 @@ public_users.get('/author-axios/:author', async function (req, res) {
   }
 });
 
+// Task 13: Get book details by Title using Promise callbacks
+public_users.get('/title-promise/:title', function (req, res) {
+  const title = req.params.title;
+  
+  // Simulate async operation using Promise callbacks
+  const getBooksByTitle = (title) => {
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        const bookKeys = Object.keys(books);
+        const matchingBooks = {};
+        
+        bookKeys.forEach(key => {
+          if (books[key].title === title) {
+            matchingBooks[key] = books[key];
+          }
+        });
+        
+        if (Object.keys(matchingBooks).length > 0) {
+          resolve(matchingBooks);
+        } else {
+          reject(new Error("No books found with this title"));
+        }
+      }, 100);
+    });
+  };
+
+  getBooksByTitle(title)
+    .then(matchingBooks => {
+      res.send(JSON.stringify(matchingBooks, null, 4));
+    })
+    .catch(error => {
+      res.status(404).json({message: "No books found with this title", error: error.message});
+    });
+});
+
+// Task 13: Get book details by Title using async-await
+public_users.get('/title-async/:title', async function (req, res) {
+  const title = req.params.title;
+  
+  try {
+    // Simulate async operation with Promise
+    const getBooksByTitle = (title) => {
+      return new Promise((resolve, reject) => {
+        setTimeout(() => {
+          const bookKeys = Object.keys(books);
+          const matchingBooks = {};
+          
+          bookKeys.forEach(key => {
+            if (books[key].title === title) {
+              matchingBooks[key] = books[key];
+            }
+          });
+          
+          if (Object.keys(matchingBooks).length > 0) {
+            resolve(matchingBooks);
+          } else {
+            reject(new Error("No books found with this title"));
+          }
+        }, 100);
+      });
+    };
+
+    const matchingBooks = await getBooksByTitle(title);
+    res.send(JSON.stringify(matchingBooks, null, 4));
+  } catch (error) {
+    res.status(404).json({message: "No books found with this title", error: error.message});
+  }
+});
+
+// Task 13: Get book details by Title using Axios
+public_users.get('/title-axios/:title', async function (req, res) {
+  const title = req.params.title;
+  
+  try {
+    // In a real scenario, this would be an external API call
+    // For demonstration, we'll simulate it with a local server call
+    const response = await axios.get(`http://localhost:5000/title/${encodeURIComponent(title)}`)
+      .catch(() => {
+        // If the call fails, we'll use local books data
+        const bookKeys = Object.keys(books);
+        const matchingBooks = {};
+        
+        bookKeys.forEach(key => {
+          if (books[key].title === title) {
+            matchingBooks[key] = books[key];
+          }
+        });
+        
+        if (Object.keys(matchingBooks).length > 0) {
+          return { data: JSON.stringify(matchingBooks, null, 4) };
+        } else {
+          throw new Error("No books found with this title");
+        }
+      });
+    
+    // If we got data from axios, parse it, otherwise use local books
+    let bookData;
+    if (typeof response.data === 'string') {
+      bookData = JSON.parse(response.data);
+    } else {
+      // Fallback to local search
+      const bookKeys = Object.keys(books);
+      const matchingBooks = {};
+      
+      bookKeys.forEach(key => {
+        if (books[key].title === title) {
+          matchingBooks[key] = books[key];
+        }
+      });
+      
+      bookData = matchingBooks;
+    }
+    
+    if (bookData && Object.keys(bookData).length > 0) {
+      res.send(JSON.stringify(bookData, null, 4));
+    } else {
+      res.status(404).json({message: "No books found with this title"});
+    }
+  } catch (error) {
+    res.status(404).json({message: "No books found with this title", error: error.message});
+  }
+});
+
 module.exports.general = public_users;
