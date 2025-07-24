@@ -249,4 +249,127 @@ public_users.get('/isbn-axios/:isbn', async function (req, res) {
   }
 });
 
+// Task 12: Get book details by Author using Promise callbacks
+public_users.get('/author-promise/:author', function (req, res) {
+  const author = req.params.author;
+  
+  // Simulate async operation using Promise callbacks
+  const getBooksByAuthor = (author) => {
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        const bookKeys = Object.keys(books);
+        const matchingBooks = {};
+        
+        bookKeys.forEach(key => {
+          if (books[key].author === author) {
+            matchingBooks[key] = books[key];
+          }
+        });
+        
+        if (Object.keys(matchingBooks).length > 0) {
+          resolve(matchingBooks);
+        } else {
+          reject(new Error("No books found by this author"));
+        }
+      }, 100);
+    });
+  };
+
+  getBooksByAuthor(author)
+    .then(matchingBooks => {
+      res.send(JSON.stringify(matchingBooks, null, 4));
+    })
+    .catch(error => {
+      res.status(404).json({message: "No books found by this author", error: error.message});
+    });
+});
+
+// Task 12: Get book details by Author using async-await
+public_users.get('/author-async/:author', async function (req, res) {
+  const author = req.params.author;
+  
+  try {
+    // Simulate async operation with Promise
+    const getBooksByAuthor = (author) => {
+      return new Promise((resolve, reject) => {
+        setTimeout(() => {
+          const bookKeys = Object.keys(books);
+          const matchingBooks = {};
+          
+          bookKeys.forEach(key => {
+            if (books[key].author === author) {
+              matchingBooks[key] = books[key];
+            }
+          });
+          
+          if (Object.keys(matchingBooks).length > 0) {
+            resolve(matchingBooks);
+          } else {
+            reject(new Error("No books found by this author"));
+          }
+        }, 100);
+      });
+    };
+
+    const matchingBooks = await getBooksByAuthor(author);
+    res.send(JSON.stringify(matchingBooks, null, 4));
+  } catch (error) {
+    res.status(404).json({message: "No books found by this author", error: error.message});
+  }
+});
+
+// Task 12: Get book details by Author using Axios
+public_users.get('/author-axios/:author', async function (req, res) {
+  const author = req.params.author;
+  
+  try {
+    // In a real scenario, this would be an external API call
+    // For demonstration, we'll simulate it with a local server call
+    const response = await axios.get(`http://localhost:5000/author/${encodeURIComponent(author)}`)
+      .catch(() => {
+        // If the call fails, we'll use local books data
+        const bookKeys = Object.keys(books);
+        const matchingBooks = {};
+        
+        bookKeys.forEach(key => {
+          if (books[key].author === author) {
+            matchingBooks[key] = books[key];
+          }
+        });
+        
+        if (Object.keys(matchingBooks).length > 0) {
+          return { data: JSON.stringify(matchingBooks, null, 4) };
+        } else {
+          throw new Error("No books found by this author");
+        }
+      });
+    
+    // If we got data from axios, parse it, otherwise use local books
+    let bookData;
+    if (typeof response.data === 'string') {
+      bookData = JSON.parse(response.data);
+    } else {
+      // Fallback to local search
+      const bookKeys = Object.keys(books);
+      const matchingBooks = {};
+      
+      bookKeys.forEach(key => {
+        if (books[key].author === author) {
+          matchingBooks[key] = books[key];
+        }
+      });
+      
+      bookData = matchingBooks;
+    }
+    
+    if (bookData && Object.keys(bookData).length > 0) {
+      res.send(JSON.stringify(bookData, null, 4));
+    } else {
+      res.status(404).json({message: "No books found by this author"});
+    }
+  } catch (error) {
+    res.status(404).json({message: "No books found by this author", error: error.message});
+  }
+});
+
 module.exports.general = public_users;
